@@ -159,11 +159,23 @@ class Wallet
     }
 
     /**
-     * TODO: fromMnemonic
+     * fromMnemonic
      * 
+     * @param string $mnemonic
      * @return $this
      */
-    // public function fromMnemonic() {}
+    public function fromMnemonic(string $mnemonic)
+    {
+        $privateKey = BIP39::mnemonicToEntropy($mnemonic);
+        $publicKey = $this->util->privateKeyToPublicKey($privateKey);
+        $address = $this->util->publicKeyToAddress($publicKey);
+
+        $this->privateKey = $privateKey;
+        $this->publicKey = $publicKey;
+        $this->mnemonic = $mnemonic;
+        $this->address = $address;
+        return $this;
+    }
 
     /**
      * generate
