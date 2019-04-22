@@ -18,11 +18,11 @@ class WalletTest extends TestCase
     {
         $wordlist = new BIP39EnglishWordList;
         $wallet = new Wallet($wordlist);
-        $wallet = $wallet->generate();
+        $wallet = $wallet->generate(12);
         $this->assertEquals(64, strlen($wallet->privateKey));
         $this->assertEquals(42, strlen($wallet->address));
         $mnemonic = explode(" ", $wallet->mnemonic);
-        $this->assertEquals(24, count($mnemonic));
+        $this->assertEquals(12, count($mnemonic));
     }
 
     /**
@@ -36,11 +36,11 @@ class WalletTest extends TestCase
         $wallet = new Wallet($wordlist);
         $zh_TW_wordlist = new BIP39ChineseTraditionalWordList;
         $wallet->wordlist = $zh_TW_wordlist;
-        $wallet = $wallet->generate();
+        $wallet = $wallet->generate(15);
         $this->assertEquals(64, strlen($wallet->privateKey));
         $this->assertEquals(42, strlen($wallet->address));
         $mnemonic = preg_split("/\s/", $wallet->mnemonic);
-        $this->assertEquals(24, count($mnemonic));
+        $this->assertEquals(15, count($mnemonic));
     }
 
     /**
@@ -52,7 +52,7 @@ class WalletTest extends TestCase
     {
         $wordlist = new BIP39EnglishWordList;
         $wallet = new Wallet($wordlist);
-        $wallet = $wallet->generate();
+        $wallet = $wallet->generate(15);
         $wallet2 = new Wallet($wordlist);
         $wallet2->fromMnemonic($wallet->mnemonic);
         $this->assertEquals($wallet->privateKey, $wallet2->privateKey);
