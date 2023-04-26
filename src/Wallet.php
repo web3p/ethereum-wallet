@@ -14,6 +14,7 @@ namespace Web3p\EthereumWallet;
 use BitWasp\BitcoinLib\BIP39\BIP39;
 use BitWasp\BitcoinLib\BIP39\BIP39WordList;
 use Web3p\EthereumUtil\Util;
+use InvalidArgumentException;
 
 /**
  * TODO: export/import version 1, 2, 3 of wallet
@@ -61,15 +62,6 @@ class Wallet
      * @var string
      */
     protected $address;
-
-    /**
-     * allowedMnemonicLength
-     * 
-     * @var array
-     */
-    protected $allowedMnemonicLength = [
-        12, 15, 18, 21, 24
-    ];
 
     /**
      * masterSeed
@@ -222,7 +214,7 @@ class Wallet
      */
     public function generate(int $mnemonicLength)
     {
-        if (!in_array($mnemonicLength, $this->allowedMnemonicLength)) {
+        if (($mnemonicLength % 3) !== 0 || $mnemonicLength < 12 || $mnemonicLength > 24) {
             throw new InvalidArgumentException("The mnemonic length wasn't allowed");
         }
         $entropyBitsLength = ($mnemonicLength * 11 * 32) / 33;
