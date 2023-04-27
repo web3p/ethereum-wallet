@@ -11,8 +11,12 @@
 
 namespace Web3p\EthereumWallet;
 
-use BitWasp\BitcoinLib\BIP39\BIP39;
-use BitWasp\BitcoinLib\BIP39\BIP39WordList;
+use BitWasp\Bitcoin\Mnemonic\MnemonicFactory;
+use BitWasp\Bitcoin\Mnemonic\BIP39\Bip39SeedGenerator;
+use BitWasp\Bitcoin\Mnemonic\BIP39\Bip39Mnemonic;
+use BitWasp\Bitcoin\Mnemonic\Bip39\Wordlist\EnglishWordList;
+use BitWasp\Bitcoin\Mnemonic\WordList;
+use BitWasp\Bitcoin\Key\Factory\HierarchicalKeyFactory;
 use Web3p\EthereumUtil\Util;
 use InvalidArgumentException;
 
@@ -24,7 +28,7 @@ class Wallet
     /**
      * wordlist
      * 
-     * @var \BitWasp\BitcoinLib\BIP39\BIP39WordList
+     * @var \BitWasp\Bitcoin\Mnemonic\WordList
      */
     protected $wordlist;
 
@@ -64,27 +68,23 @@ class Wallet
     protected $address;
 
     /**
-     * masterSeed
+     * defaultPath
      * 
      * @var string
      */
-    protected $masterSeed = "Bitcoin seed";
-
-    /**
-     * chainCode
-     * 
-     * @var string
-     */
-    protected $chainCode;
+    protected $defaultPath = '44\'/60\'/0\'/0/0';
 
     /**
      * construct
      * 
-     * @param \BitWasp\BitcoinLib\BIP39\BIP39WordList $wordlist
+     * @param \BitWasp\Bitcoin\Mnemonic\WordList $wordlist
      * @return void
      */
-    public function __construct(BIP39WordList $wordlist)
+    public function __construct(WordList $wordlist = null)
     {
+        if (!$wordlist) {
+            $wordlist = new EnglishWordList;
+        }
         $this->wordlist = $wordlist;
         $this->util = new Util;
     }
@@ -165,36 +165,35 @@ class Wallet
     /**
      * setWordlist
      * 
-     * @param BIP39WordList $wordlist
+     * @param \BitWasp\Bitcoin\Mnemonic\WordList $wordlist
      * @return void
      */
-    public function setWordlist(BIP39WordList $wordlist)
+    public function setWordlist(WordList $wordlist)
     {
         $this->wordlist = $wordlist;
     }
 
     /**
-     * getChainCode
-     * 
-     * @return string
-     */
-    public function getChainCode()
-    {
-        return $this->chainCode;
-    }
-
-    /**
      * fromMnemonic
      * 
-     * @param string $mnemonic
+     * @param string $mnemonic mnemonic string
+     * @param string $path relative hd path (remove m prefix)
      * @return $this
      */
-    public function fromMnemonic(string $mnemonic)
+    public function fromMnemonic(string $mnemonic, string $path = '')
     {
-        $entropy = BIP39::mnemonicToEntropy($mnemonic);
-        $hash = hash_hmac("sha512", $entropy, $this->masterSeed);
-        $privateKey = substr($hash, 0, 64);
-        $chainCode = substr($hash, 64);
+        $factory = MnemonicFactory::bip39($this->wordlist);
+        $entropy = $factory->mnemonicToEntropy($mnemonic);
+        $mnemonic = $factory->entropyToMnemonic($entropy);
+        $generator = new Bip39SeedGenerator();
+        $seed = $generator->getSeed($mnemonic);
+        $hdFactory = new HierarchicalKeyFactory();
+        $key = $hdFactory->fromEntropy($seed);
+        if (strlen($path) == 0) {
+            $path = $this->defaultPath;
+        }
+        $key = $key->derivePath($path);
+        $privateKey = $key->getPrivateKey()->getBuffer()->getHex();
         $publicKey = $this->util->privateKeyToPublicKey($privateKey);
         $address = $this->util->publicKeyToAddress($publicKey);
 
@@ -202,27 +201,33 @@ class Wallet
         $this->publicKey = $publicKey;
         $this->mnemonic = $mnemonic;
         $this->address = $address;
-        $this->chainCode = $chainCode;
         return $this;
     }
 
     /**
      * generate
      * 
-     * @param int $mnemonicLength
+     * @param int $mnemonicLength mnemonic length
+     * @param string $path relative hd path (remove m prefix)
      * @return $this
      */
-    public function generate(int $mnemonicLength)
+    public function generate(int $mnemonicLength, string $path = '')
     {
         if (($mnemonicLength % 3) !== 0 || $mnemonicLength < 12 || $mnemonicLength > 24) {
             throw new InvalidArgumentException("The mnemonic length wasn't allowed");
         }
         $entropyBitsLength = ($mnemonicLength * 11 * 32) / 33;
-        $entropy = BIP39::generateEntropy($entropyBitsLength);
-        $hash = hash_hmac("sha512", $entropy, $this->masterSeed);
-        $privateKey = substr($hash, 0, 64);
-        $chainCode = substr($hash, 64);
-        $mnemonic = BIP39::entropyToMnemonic($entropy, $this->wordlist);
+        $factory = MnemonicFactory::bip39($this->wordlist);
+        $mnemonic = $factory->create($entropyBitsLength);
+        $generator = new Bip39SeedGenerator();
+        $seed = $generator->getSeed($mnemonic);
+        $hdFactory = new HierarchicalKeyFactory();
+        $key = $hdFactory->fromEntropy($seed);
+        if (strlen($path) == 0) {
+            $path = $this->defaultPath;
+        }
+        $key = $key->derivePath($path);
+        $privateKey = $key->getPrivateKey()->getBuffer()->getHex();
         $publicKey = $this->util->privateKeyToPublicKey($privateKey);
         $address = $this->util->publicKeyToAddress($publicKey);
 
@@ -230,7 +235,6 @@ class Wallet
         $this->publicKey = $publicKey;
         $this->mnemonic = $mnemonic;
         $this->address = $address;
-        $this->chainCode = $chainCode;
         return $this;
     }
 }

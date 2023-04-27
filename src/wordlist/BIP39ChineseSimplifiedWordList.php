@@ -10,19 +10,25 @@
 
 namespace Web3p\EthereumWallet\Wordlist;
 
-use BitWasp\BitcoinLib\BIP39\BIP39WordList;
+use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39WordListInterface;
+use BitWasp\Bitcoin\Mnemonic\WordList;
 
-class BIP39ChineseSimplifiedWordList extends BIP39WordList
+class BIP39ChineseSimplifiedWordList extends WordList implements Bip39WordListInterface
 {
 
     protected $wordsFlipped;
 
-    public function getWords()
+    public function count(): int
+    {
+        return count($this->getWords());
+    }
+
+    public function getWords(): array
     {
         return $this->words;
     }
 
-    public function getWord($idx)
+    public function getWord(int $idx): string
     {
         if (!isset($this->words)) {
             throw new \Exception(__CLASS__ . " does not contain a word for index [{$idx}]");
@@ -31,7 +37,7 @@ class BIP39ChineseSimplifiedWordList extends BIP39WordList
         return $this->words[$idx];
     }
 
-    public function getIndex($word)
+    public function getIndex(string $word): int
     {
         // create a flipped word list to speed up the searching of words
         if (is_null($this->wordsFlipped)) {

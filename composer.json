@@ -23,8 +23,8 @@
         }
     },
     "require": {
-        "bitwasp/bitcoin-lib": "1.0.*",
     	"PHP": "^7.1 | ^8.0",
-    	"web3p/ethereum-util": "^0.1"
+    	"web3p/ethereum-util": "^0.1",
+        "bitwasp/bitcoin": "^1.0"
     }
 }
