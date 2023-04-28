@@ -7,7 +7,8 @@ jobs:
     name: Build and test ethereum-wallet with ${{ matrix.php-version }}
     strategy:
       matrix:
-        php-version: ["7.3", "7.4", "8.0"]
+        # bitcoin didn't support 8.0 yet, see: https://github.com/Bit-Wasp/bitcoin-php/pull/898
+        php-version: ["7.2", "7.3", "7.4"]
 
     runs-on: ubuntu-latest
 
