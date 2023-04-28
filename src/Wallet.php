@@ -12,8 +12,8 @@
 namespace Web3p\EthereumWallet;
 
 use BitWasp\Bitcoin\Mnemonic\MnemonicFactory;
-use BitWasp\Bitcoin\Mnemonic\BIP39\Bip39SeedGenerator;
-use BitWasp\Bitcoin\Mnemonic\BIP39\Bip39Mnemonic;
+use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39SeedGenerator;
+use BitWasp\Bitcoin\Mnemonic\Bip39\Bip39Mnemonic;
 use BitWasp\Bitcoin\Mnemonic\Bip39\Wordlist\EnglishWordList;
 use BitWasp\Bitcoin\Mnemonic\WordList;
 use BitWasp\Bitcoin\Key\Factory\HierarchicalKeyFactory;
